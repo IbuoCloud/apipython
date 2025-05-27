@@ -1,15 +1,14 @@
 from fastapi import FastAPI, HTTPException, Depends
-
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from typing import List, Optional, Dict, Union
+from .schemas import SolutionResponse
+
 import math_engine.numeric as numeric
 import math_engine.symbolic as symbolic
 import math_engine.plotting as plotting
 import math_engine.equation as equation
 from .schemas import NumbersInput, TwoNumbersInput, ExpressionInput, EquationInput, PlotInput
 from .dependencies import NumbersDep, TwoNumbersDep, ExpressionDep, ConfigDep
-
 
 app = FastAPI(
     title="Math API",
@@ -25,25 +24,19 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Modelos de datos
-
-
 # Endpoints numéricos
 @app.post("/numeric/add")
 async def add_numbers(numbers: NumbersDep):
     return {"result": numeric.add(numbers)}
-
 
 @app.post("/numeric/subtract")
 async def subtract_numbers(numbers: TwoNumbersDep):
     a, b = numbers
     return {"result": numeric.subtract(a, b)}
 
-
 @app.post("/numeric/multiply")
 async def multiply_numbers(numbers: NumbersDep):
     return {"result": numeric.multiply(numbers)}
-
 
 @app.post("/numeric/divide")
 async def divide_numbers(numbers: TwoNumbersDep):
@@ -53,25 +46,33 @@ async def divide_numbers(numbers: TwoNumbersDep):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
 # Endpoints simbólicos
-@app.post("/symbolic/solve")
+@app.post("/symbolic/solve", response_model=SolutionResponse)
 async def solve_symbolic(expression_data: ExpressionDep, config: ConfigDep):
     expr, var = expression_data
-    return symbolic.solve_equation(expr, var)
-
+    try:
+        result = symbolic.solve_equation(expr, var)
+        if result.get("status") == "error":
+            raise HTTPException(status_code=400, detail=result["message"])
+        
+        solutions = [str(sol).strip() for sol in result["solutions"]]
+        return SolutionResponse(
+            solutions=solutions,
+            variable=str(result["variable"]),
+            status="success"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/symbolic/derivative")
 async def calculate_derivative(expression_data: ExpressionDep):
     expr, var = expression_data
     return {"result": symbolic.derivative(expr, var)}
 
-
 @app.post("/symbolic/integral")
 async def calculate_integral(expression_data: ExpressionDep):
     expr, var = expression_data
     return {"result": symbolic.integral(expr, var)}
-
 
 # Endpoints de gráficos
 @app.post("/plot/function")
@@ -80,7 +81,6 @@ async def plot_function(data: PlotInput, config: ConfigDep):
         "image": plotting.plot_function(data.expression, (data.x_range.min, data.x_range.max)),
         "config": config
     }
-
 
 @app.post("/plot/surface")
 async def plot_surface(data: PlotInput, config: ConfigDep):
@@ -93,7 +93,6 @@ async def plot_surface(data: PlotInput, config: ConfigDep):
         "config": config
     }
 
-
 # Endpoints de ecuaciones
 @app.post("/equation/solve")
 async def solve_equation(data: EquationInput, config: ConfigDep):
@@ -104,7 +103,6 @@ async def solve_equation(data: EquationInput, config: ConfigDep):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
 
 @app.get("/")
 async def root():

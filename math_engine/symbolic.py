@@ -33,11 +33,17 @@ def solve_equation(equation: str, variable: str = 'x') -> Dict[str, Union[float,
         if not solutions:
             raise ValueError("La ecuación no tiene solución")
             
+        formatted_solutions = [str(sol).strip() for sol in solutions]
         return {
-            "solutions": [str(sol) for sol in solutions],
+            "solutions": formatted_solutions,
             "variable": variable,
             "status": "success"
         }
+
+
+
+
+
         
     except Exception as e:
         return {

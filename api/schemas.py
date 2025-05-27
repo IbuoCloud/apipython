@@ -1,7 +1,31 @@
 from pydantic import BaseModel, conlist, confloat
 from typing import List, Optional, Dict, Union
 
+class SolutionResponse(BaseModel):
+    solutions: List[str]
+    variable: str
+    status: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "solutions": ["-3", "3"],
+                "variable": "x", 
+                "status": "success"
+            }
+        }
+        
+        json_encoders = {
+            str: lambda v: str(v),
+            list: lambda v: [str(i) for i in v]
+        }
+
+
+
+
+
 class NumbersInput(BaseModel):
+
     numbers: conlist(float, min_length=1)
 
 
