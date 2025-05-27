@@ -115,15 +115,15 @@ async def root():
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', type=int, default=8001, help='Port to run the server on')
+    parser.add_argument('--port', type=int, default=80, help='Port to run the server on')
     parser.add_argument('--log-level', type=str, default='info', 
-                      choices=['critical', 'error', 'warning', 'info', 'debug', 'trace'],
-                      help='Log level for the server')
+                        choices=['critical', 'error', 'warning', 'info', 'debug', 'trace'],
+                        help='Log level for the server')
     args = parser.parse_args()
-    
+
     uvicorn.run(
         "api.main:app",
-        host="0.0.0.0", 
+        host="0.0.0.0",
         port=args.port,
         reload=True,
         workers=1,
