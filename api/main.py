@@ -1,14 +1,18 @@
+import uvicorn
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional, Dict, Union
-from .schemas import SolutionResponse
+from api.schemas import SolutionResponse
+
+
 
 import math_engine.numeric as numeric
 import math_engine.symbolic as symbolic
 import math_engine.plotting as plotting
 import math_engine.equation as equation
-from .schemas import NumbersInput, TwoNumbersInput, ExpressionInput, EquationInput, PlotInput
-from .dependencies import NumbersDep, TwoNumbersDep, ExpressionDep, ConfigDep
+from api.schemas import NumbersInput, TwoNumbersInput, ExpressionInput, EquationInput, PlotInput
+from api.dependencies import NumbersDep, TwoNumbersDep, ExpressionDep, ConfigDep
+
 
 app = FastAPI(
     title="Math API",
@@ -107,3 +111,13 @@ async def solve_equation(data: EquationInput, config: ConfigDep):
 @app.get("/")
 async def root():
     return {"message": "Math API - Documentación disponible en /docs"}
+
+if __name__ == "__main__":
+    uvicorn.run(
+        app,
+        host="0.0.0.0", 
+        port=8000,
+        reload=True,
+        workers=1,
+        log_level="info"
+    )
